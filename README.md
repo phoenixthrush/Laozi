@@ -1,5 +1,7 @@
 # Laozi
 
+Discord RAT written in Python
+
 ## Getting Started
 
 1. Copy the example environment file:
@@ -19,49 +21,19 @@ python -m laozi
 
 ## Available Commands
 
--   `!message`
--   `!shell`
--   `!voice`
--   `!admincheck`
--   `!cd`
--   `!dir`
--   `!download`
--   `!upload`
--   `!uploadlink`
--   `!delete`
--   `!write`
--   `!wallpaper`
--   `!clipboard`
--   `!idletime`
--   `!currentdir`
--   `!block`
--   `!unblock`
--   `!screenshot`
--   `!exit`
--   `!kill`
--   `!uacbypass`
--   `!shutdown`
--   `!restart`
--   `!logoff`
--   `!bluescreen`
--   `!datetime`
--   `!prockill`
--   `!disabledefender`
--   `!disablefirewall`
--   `!audio`
--   `!critproc`
--   `!uncritproc`
--   `!website`
--   `!disabletaskmgr`
--   `!enabletaskmgr`
--   `!startup`
--   `!geolocate`
--   `!listprocess`
--   `!password`
--   `!rootkit`
--   `!unrootkit`
--   `!getcams`
--   `!selectcam`
--   `!webcampic`
--   `!grabtokens`
--   `!help`
+```
+!help                                    -> Show available commands
+!alert       <message>                   -> Trigger message box"
+!clipboard                               -> Get clipboard content"
+!execute     <command>                   -> Execute a shell command"
+!screenshot                              -> Take a screenshot"
+!sysinfo                                 -> Get system information"
+!webcam                                  -> Get webcam snapshot"
+!website     <url>                       -> Open a website"
+!voice       <text>                      -> Read text out loud"
+!power       <shutdown, reboot, logout>  -> Set power options"
+```
+
+## Legal Disclaimer
+
+This tool is designed solely for educational purposes, and the author explicitly disclaims any liability or responsibility for any improper, unethical, or unlawful use of this tool. Users are expected to exercise caution and adhere to all applicable laws and ethical guidelines when utilizing this tool.
