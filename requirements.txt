@@ -3,3 +3,4 @@ psutil
 pyperclip
 pyautogui
 opencv-python
+pyttsx3
